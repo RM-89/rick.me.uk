@@ -58,7 +58,7 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
             var(--gradientStart),
             color-mix(in srgb, var(--color-brand) 15%, transparent));
         opacity: 0.5;
-        transition: opacity 0.1s ease, filter 0.1s ease;
+        transition: opacity 0.1s ease;
     }
 
     &::after {
@@ -73,7 +73,7 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
         border-radius: 0.5rem;
         box-shadow: inset 0 0 0 2px var(--color-overlay-light);
         opacity: 0.5;
-        transition: box-shadow 0.1s ease;
+        transition: opacity 0.1s ease;
     }
 
     &-background {
@@ -106,7 +106,7 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
             width: 100%;
             height: 100%;
             background: var(--color-background-lower);
-            opacity: 0.25;
+            opacity: 0.33;
         }
     }
 
@@ -116,7 +116,7 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 1;
+        z-index: 10;
     }
 
     &-header-before-title {
@@ -125,17 +125,19 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
         font-size: 1rem;
     }
 
-    .card-header-title {
+    &-header-title {
         margin: 1rem 0 .35rem 0;
         font-variation-settings: "wdth" 100;
         font-size: 1.2rem;
         color: var(--color-foreground);
+        z-index: 1;
     }
 
     &-body {
         flex: 1;
         color: var(--color-foreground-muted-2);
         transition: color 0.1s ease;
+        z-index: 1;
     }
 
     &-footer {
@@ -168,27 +170,29 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
     }
 
     &-high-contrast {
+        .card-header-title,
         .card-body {
             color: var(--color-foreground);
+            text-shadow: 0 0 2px #000;
         }
 
         &::before {
-            filter: saturate(0);
+            background: var(--gradientStart);
         }
 
         &::after {
-            opacity: 0.65;
+            opacity: 1;
         }
     }
 
     &.accent {
         &-1 {
-            &::before {
+            &:hover::before {
                 background: linear-gradient(145deg,
                     var(--gradientStart),
                     color-mix(in srgb, var(--color-accent-1) 25%, transparent));
             }
-
+            
             :global(.badge) {
                 background-color: var(--color-accent-1);
             }
@@ -203,12 +207,12 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
         }
 
         &-2 {
-            &::before {
+            &:hover::before {
                 background: linear-gradient(145deg,
                     var(--gradientStart),
                     color-mix(in srgb, var(--color-accent-2) 25%, transparent));
             }
-
+            
             :global(.badge) {
                 background-color: var(--color-accent-2);
             }
@@ -223,16 +227,16 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
         }
 
         &-3 {
-            &::before {
+            &:hover::before {
                 background: linear-gradient(145deg,
                     var(--gradientStart),
                     color-mix(in srgb, var(--color-accent-3) 25%, transparent));
             }
-
+            
             :global(.badge) {
                 background-color: var(--color-accent-3);
             }
-
+            
             :global(.card-footer a) {
                 color: var(--color-accent-3);
 
@@ -243,12 +247,12 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
         }
 
         &-4 {
-            &::before {
+            &:hover::before {
                 background: linear-gradient(145deg,
                     var(--gradientStart),
                     color-mix(in srgb, var(--color-accent-4) 25%, transparent));
             }
-
+            
             :global(.badge) {
                 background-color: var(--color-accent-4);
             }
@@ -264,11 +268,7 @@ const gradientStart = backgroundImage == null ? "#ffffff06" : "#ffffff04";
     }
 
     &:hover {
-        &::before {
-            opacity: 1;
-            filter: saturate(1);
-        }
-
+        &::before,
         &::after {
             opacity: 1;
         }

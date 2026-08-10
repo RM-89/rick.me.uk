@@ -184,6 +184,24 @@ body {
         --header-border-radius: .3em;
         box-shadow: none;
 
+        &.has-title {
+            &:not(.is-terminal) figcaption.header {
+                background: none;
+
+                &::before {
+                    border: none;
+                }
+
+                span.title::after {
+                    border-bottom: 2px solid var(--color-brand);
+                }
+            }
+
+            pre {
+                border-top-right-radius: inherit;
+            }
+        }
+
         .copy {
             --ec-frm-tooltipSuccessBg: var(--color-accent-1);
             --ec-frm-tooltipSuccessFg: var(--color-foreground-inverted);

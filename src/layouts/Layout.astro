@@ -192,8 +192,12 @@ body {
                     border: none;
                 }
 
-                span.title::after {
-                    border-bottom: 2px solid var(--color-brand);
+                span.title {
+                    border: none;
+                    
+                    &::after {
+                        border-bottom: 2px solid var(--color-brand);
+                    }
                 }
             }
 

@@ -1,0 +1,48 @@
+---
+title: "Tura's Tale"
+description: "A networked action RPG demo built in Unity 6"
+type: "Game"
+weight: 21
+headerImage: "./turas-tale.jpg"
+url: "https://code.rick.me.uk/rm/unity-turas-tale"
+tags: ["unity", "multiplayer", "arpg"]
+---
+import ExtLink from '../../../components/ExtLink.astro';
+import Image from '../../../components/Image.astro';
+import Box from '../../../components/Box.astro';
+import imageScreenshot1 from './screenshot-1.jpg';
+import imageScreenshot2 from './screenshot-2.jpg';
+import imageScreenshotDialogueEditor from './screenshot-dialogue-editor.png';
+import imageScreenshotNetVis from './network-vis.jpg';
+
+**Tura's Tale** is a demo I started developing in Unity last year and recently picked up again. My goal with this project is to develop a polished vertical slice for a stylised, semi-casual action RPG, bringing together a number of key systems with an emphasis on quality, robustness, and satisfying gameplay.
+
+Highlights in the current version of the project include:
+
+<div class="grid grid-2">
+    <Box>
+        <h4>Dialogue System</h4>
+        A custom dialogue system complete with a dialogue graph editor
+    </Box>
+    <Box>
+        <h4>Interaction System</h4>
+        Component-driven player interactions for combat, interacting with NPCs, and more
+    </Box>
+    <Box>
+        <h4>Footstep Audio</h4>
+        Material-aware footstep sound effects integrated with the <ExtLink url="https://assetstore.unity.com/packages/tools/terrain/microsplat-96478">MicroSplat</ExtLink> terrain system
+    </Box>
+    <Box>
+        <h4>Networking</h4>
+        Multiplayer via Netcode for GameObjects
+    </Box>
+</div>
+
+## Media
+
+<div class="grid grid-2">
+    <Image src={imageScreenshot1} alt="In-game screenshot 1" />
+    <Image src={imageScreenshot2} alt="In-game screenshot 2" />
+    <Image src={imageScreenshotNetVis} alt="Network visualisation" />
+    <Image src={imageScreenshotDialogueEditor} alt="Dialogue graph editor" />
+</div>

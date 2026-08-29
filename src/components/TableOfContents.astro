@@ -108,7 +108,8 @@ const filteredHeadings = headings.filter((heading) => heading.depth <= levels);
 
             }
 
-            :global(a.active) {
+            :global(a.active),
+            :global(a.active:hover) {
                 border-left-color: var(--color-brand);
                 color: var(--color-brand);
             }

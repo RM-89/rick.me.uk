@@ -1,0 +1,19 @@
+---
+import Card from "./Card.astro";
+
+interface Props {
+    series: any;
+}
+
+const { series, accent = null } = Astro.props;
+
+const postLabel = `${series.postCount} post${series.postCount > 1 ? 's' : ''}`;
+---
+
+<Card item={series} accent={accent}>
+    <div slot="footer">
+        <div class="badge">
+            {postLabel}
+        </div>
+    </div>
+</Card>

@@ -1,12 +1,13 @@
 ---
 import type { GetStaticPathsOptions } from "astro";
-import { loadAndFormatCollection } from "../../scripts/utils/collection";
+import { loadAndFormatCollection, getSeriesItems } from "../../scripts/utils/collection";
 
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import Container from "../../components/Container.astro";
 import Pagination from "../../components/Pagination.astro";
 import PostCard from "../../components/PostCard.astro";
+import SeriesCard from "../../components/SeriesCard.astro";
 import RSSIcon from "../../components/Icons/RSSIcon.astro";
 
 export async function getStaticPaths(options: GetStaticPathsOptions) {
@@ -18,12 +19,27 @@ export async function getStaticPaths(options: GetStaticPathsOptions) {
 }
 
 const { page } = Astro.props;
+
+const posts = await loadAndFormatCollection("posts");
+const series = await getSeriesItems(posts);
 ---
 
 <Layout title="Posts">
     <div class="page">
         <Container maxWidth="900px">
             <Header title="Posts" />
+
+            {
+                page.currentPage == 1 && series.length > 0 && (
+                    <h2>Series</h2>
+
+                    <div class="series grid">
+                        {series.map((seriesItem) => <SeriesCard series={seriesItem} accent="accent-2" />)}
+                    </div>
+
+                    <hr />
+                )
+            }
 
             <div class="rss">
                 <a href="/rss.xml" target="_blank"><RSSIcon style="vertical-align: -2px;" /> RSS</a>
@@ -51,6 +67,45 @@ const { page } = Astro.props;
 
     a {
         text-decoration: none;
+    }
+}
+
+h2 {
+    font-size: 2.2rem;
+    font-weight: 500;
+    margin: 0 0 1rem 0;
+}
+
+.series {
+    margin-bottom: 2rem;
+
+    :global(.card) {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    :global(.card .card-header .card-header-title) {
+        min-width: 120px;
+        font-size: 1.4rem;
+        margin: 0;
+    }
+}
+
+@media (width < 48rem) {
+    .series {
+        :global(.card) {
+            display: block;
+        }
+
+        :global(.card-body) {
+            margin-bottom: .5rem;
+        }
+
+        :global(.card-footer) {
+            text-align: right;
+        }
     }
 }
 </style>

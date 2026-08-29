@@ -1,0 +1,18 @@
+---
+import { loadAndFormatCollection, getSeries } from "../../../../scripts/utils/collection";
+
+export async function getStaticPaths() {
+    const posts = await loadAndFormatCollection("posts");
+    const series = await getSeries(posts);
+
+    return series.map((seriesName) => {
+        return {
+            params: { series: seriesName },
+        };
+    });
+}
+
+const { series } = Astro.params;
+
+return Astro.redirect(`/posts/series/${series}/1`);
+---

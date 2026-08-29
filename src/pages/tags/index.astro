@@ -13,11 +13,9 @@ const projectTags = await getTags(projects);
 
 <Layout title="Tags">
     <div class="container container--tags">
-        <div class="head-container">
-            <Header title="Tags" />
-        </div>
-
         <Container maxWidth="700px">
+            <Header title="Tags" />
+
             <h2>Browse posts tagged with…</h2>
 
             <ul class="tags">
@@ -60,5 +58,9 @@ h2 {
 
 ul.tags li a span {
     font-size: 1.25rem;
+}
+
+:global(.header) {
+    text-align: center !important;
 }
 </style>

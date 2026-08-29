@@ -3,6 +3,7 @@ import type { MarkdownHeading } from "astro";
 
 import { loadAndFormatCollection } from "../scripts/utils/collection";
 import { truncate } from "../scripts/utils/string";
+import { SERIES } from "../series.config";
 
 import Layout from "./Layout.astro";
 import Container from "../components/Container.astro";
@@ -21,10 +22,11 @@ interface Props {
         format: string;
     };
     tags: string[];
+    series?: string;
     headings: MarkdownHeading[];
 }
 
-const { title, description, pubDate, headerImage, tags, headings } = Astro.props;
+const { title, description, pubDate, headerImage, tags, series, headings } = Astro.props;
 
 const posts: any[] = (await loadAndFormatCollection("posts")).sort(
     (a: any, b: any) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf(),
@@ -65,9 +67,19 @@ if (nextPost != null) {
             </ul>
         </Header>
 
-        <div class="publish-date">
-            {pubDate.toLocaleString("default", { month: "long" })} {pubDate.getDate()}, {pubDate.getFullYear()}
+        <div class="meta">
+            <div>
+                {pubDate.toLocaleString("default", { month: "long" })} {pubDate.getDate()}, {pubDate.getFullYear()}
+            </div>
+
+            { series && (
+                <div>•</div>
+                <div>
+                    Part of the '<a href={`/posts/series/${series}/1`}>{SERIES[series].title}</a>' series
+                </div>
+            )}
         </div>
+
     </Container>
 
     <div class="content">
@@ -100,7 +112,11 @@ if (nextPost != null) {
 </Layout>
 
 <style lang="scss">
-.publish-date {
+.meta {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.5rem;
     margin-bottom: 1rem;
     text-align: center;
     font-weight: 500;

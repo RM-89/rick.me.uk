@@ -4,6 +4,19 @@ import { Image } from "astro:assets";
 import Container from "./Container.astro";
 
 import logo from "../assets/logo.svg";
+
+const { pathname } = Astro.url;
+
+interface Link {
+    href: string;
+    label: string;
+}
+
+const links: Link[] = [
+    { href: "/posts/1", label: "Posts" },
+    { href: "/projects", label: "Projects" },
+    { href: "/tags", label: "Tags" },
+];
 ---
 
 <nav class="navbar">
@@ -13,9 +26,9 @@ import logo from "../assets/logo.svg";
                 <Image src={logo} alt="" width={64} />
             </a>
             <ul>
-                <li><a href="/posts/1">Posts</a></li>
-                <li><a href="/projects">Projects</a></li>
-                <li><a href="/tags">Tags</a></li>
+                { links.map((link: Link) => (
+                <li><a href={link.href} class={ link.href == pathname ? "active" : "" }>{link.label}</a></li>
+                )) }
             </ul>
         </div>
     </Container>
@@ -73,13 +86,21 @@ import logo from "../assets/logo.svg";
             padding: 0;
             margin: 0;
 
+            li {
+                margin: 0 .1rem;
+            }
+
             a {
                 display: block;
-                padding: .75rem .5rem;
+                padding: .85rem .5rem;
                 text-decoration: none;
                 font-weight: 500;
                 font-size: 1.25rem;
                 color: var(--color-foreground-muted-2);
+
+                &.active {
+                    border-bottom: 3px solid var(--color-brand);
+                }
 
                 &:hover {
                     color: var(--color-foreground);

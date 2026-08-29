@@ -16,9 +16,9 @@ const title = "Projects";
 ---
 
 <Layout title={title}>
-    <Header title={title} />
+    <Container maxWidth="900px">
+        <Header title={title} />
 
-    <Container>
         <div class="overview">
             This is a selection of projects I've worked on.
             <br />
@@ -59,7 +59,6 @@ const title = "Projects";
 <style lang="scss">
 .overview {
     margin-bottom: 3rem;
-    text-align: center;
     font-size: 1.2rem;
     font-weight: 500;
     color: var(--color-foreground-muted-2);
@@ -67,7 +66,6 @@ const title = "Projects";
 
 .filter {
     margin-bottom: 2rem;
-    text-align: center;
     font-weight: 500;
     color: var(--color-foreground-muted-2);
 
@@ -75,7 +73,6 @@ const title = "Projects";
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
-        justify-content: center;
         margin-top: 0.5rem;
     }
 
@@ -116,5 +113,9 @@ const title = "Projects";
 .projects {
     padding-bottom: 2rem;
     gap: 1rem;
+
+    :global(.card .card-header .card-header-title) {
+        font-size: 1.4rem;
+    }
 }
 </style>

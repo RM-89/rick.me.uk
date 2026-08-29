@@ -21,14 +21,13 @@ const hasAfterContent = Astro.slots.has('after');
 <style lang="scss" define:vars={{ backgroundImageUrl }}>
 .header {
     position: relative;
-    padding: 3rem 0;
+    margin: 1rem 0;
     background-size: cover;
     background-position: center;
     font-size: 1.5rem;
     font-weight: 500;
     color: var(--color-foreground);
     background: none;
-    text-align: center;
 
     .background {
         position: absolute;
@@ -55,13 +54,9 @@ const hasAfterContent = Astro.slots.has('after');
         }
     }
 
-    .content {
-        position: relative;
-        z-index: 1;
-        padding: 0 1rem;
-    }
-
     &.with-background {
+        padding: 3rem 0;
+        text-align: center;
         margin-bottom: 2rem;
         border-radius: 1rem;
         box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.05), 0 0 5px rgba(0, 0, 0, 0.1);
@@ -69,6 +64,12 @@ const hasAfterContent = Astro.slots.has('after');
         h1 {
             margin-bottom: .5rem;
             font-variation-settings: "wdth" 100;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            padding: 0 1rem;
         }
     }
 

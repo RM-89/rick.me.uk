@@ -73,9 +73,8 @@ if (nextPost != null) {
             </div>
 
             { series && (
-                <div>•</div>
                 <div>
-                    Part of the '<a href={`/posts/series/${series}/1/`}>{SERIES[series].title}</a>' series
+                    Part of the <a href={`/posts/series/${series}/1/`}>{SERIES[series].title}</a> series
                 </div>
             )}
         </div>
@@ -114,9 +113,8 @@ if (nextPost != null) {
 <style lang="scss">
 .meta {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: center;
-    gap: 0.5rem;
     margin-bottom: 1rem;
     text-align: center;
     font-weight: 500;

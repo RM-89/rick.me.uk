@@ -21,7 +21,7 @@ const filteredHeadings = headings.filter((heading) => heading.depth <= levels);
         {
             filteredHeadings.map((heading) => (
                 <li>
-                    <a href={`#${heading.slug}`}>
+                    <a href={`#${heading.slug}`} data-slug={heading.slug}>
                         {heading.text}
                     </a>
                 </li>
@@ -29,6 +29,49 @@ const filteredHeadings = headings.filter((heading) => heading.depth <= levels);
         }
     </ul>
 </div>
+
+<script>
+    const wideDisplay = window.matchMedia("(min-width: 48rem)");
+    const toc = document.querySelector(".toc");
+
+    if (wideDisplay.matches && toc) {
+        const links = [...toc.querySelectorAll("a[data-slug]")];
+        const headings = links
+            .map((link) => document.getElementById(link.dataset.slug))
+            .filter(Boolean);
+        const linkBySlug = new Map(links.map((link) => [link.dataset.slug, link]));
+
+        let activeSlug = null;
+
+        const clearActive = () => {
+            linkBySlug.get(activeSlug)?.classList.remove("active");
+            activeSlug = null;
+        };
+
+        const update = () => {
+            const threshold = window.innerHeight / 2;
+            let slug = null;
+
+            for (const heading of headings) {
+                if (heading.getBoundingClientRect().top > threshold) break;
+                slug = heading.id;
+            }
+
+            if (slug === null && headings.length > 0) {
+                slug = headings[0].id;
+            }
+
+            if (slug !== activeSlug) {
+                linkBySlug.get(activeSlug)?.classList.remove("active");
+                linkBySlug.get(slug)?.classList.add("active");
+                activeSlug = slug;
+            }
+        };
+
+        document.addEventListener("scroll", () => requestAnimationFrame(update), { passive: true });
+        update();
+    }
+</script>
 
 <style lang="scss">
 .toc {
@@ -49,6 +92,26 @@ const filteredHeadings = headings.filter((heading) => heading.depth <= levels);
 
         li {
             margin: .5rem 0;
+
+            a {
+                display: block;
+                padding: 0 0 0 .75rem;
+                border-left: 3px solid var(--color-overlay-light);
+                font-weight: 500;
+                color: var(--color-foreground-muted-3);
+                text-decoration: none;
+
+                &:hover {
+                    border-left-color: var(--color-foreground);
+                    color: var(--color-foreground);
+                }
+
+            }
+
+            :global(a.active) {
+                border-left-color: var(--color-brand);
+                color: var(--color-brand);
+            }
         }
     }
 }

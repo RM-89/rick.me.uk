@@ -52,7 +52,7 @@ export async function getSeriesItems(collection: any[]) {
         return {
             slug,
             postCount: collection.filter((item: any) => item.data.series === slug).length,
-            absoluteURL: `/posts/series/${slug}/1`,
+            absoluteURL: `/posts/series/${slug}/1/`,
             data: {
                 title: meta?.title,
                 description: meta?.description,

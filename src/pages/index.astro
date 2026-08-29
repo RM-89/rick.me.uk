@@ -50,7 +50,7 @@ const projects = (await loadAndFormatCollection("projects", false))
     <Section withBackground={false}>
         <div class="section-header">
             <h2>Posts</h2>
-            <Button href="/posts/1">See more</Button>
+            <Button href="/posts/1/">See more</Button>
         </div>
         <div class="grid grid-3" style="gap: 2rem;">
             { posts.map((post: any) => (
@@ -58,14 +58,14 @@ const projects = (await loadAndFormatCollection("projects", false))
             )) }
         </div>
         <div class="see-more">
-            <Button href="/posts/1">See more</Button>
+            <Button href="/posts/1/">See more</Button>
         </div>
     </Section>
 
     <Section withBackground={true}>
         <div class="section-header">
             <h2>Projects</h2>
-            <Button href="/projects">See more</Button>
+            <Button href="/projects/">See more</Button>
         </div>
         <div class="grid grid-3" style="gap: 2rem;">
             { projects.map((project: any) => (
@@ -73,7 +73,7 @@ const projects = (await loadAndFormatCollection("projects", false))
             )) }
         </div>
         <div class="see-more">
-            <Button href="/projects">See more</Button>
+            <Button href="/projects/">See more</Button>
         </div>
     </Section>
 

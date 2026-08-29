@@ -27,7 +27,7 @@ const links: Link[] = [
             </a>
             <ul>
                 { links.map((link: Link) => (
-                <li><a href={link.href} class={ link.href == pathname ? "active" : "" }>{link.label}</a></li>
+                    <li><a href={link.href} class={ link.href == pathname ? "active" : "" }>{link.label}</a></li>
                 )) }
             </ul>
         </div>

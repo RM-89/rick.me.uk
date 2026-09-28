@@ -256,7 +256,7 @@ struct ModelInstanceComponent
 
 This split enables the server to create entities with `ModelComponent` and queue them for replication. Since `Assets::AssetId` is just `uint32_t`, it already has replication support, so all I needed to do was process the entities.
 
-I created three entities - one for each module - like this:
+I created three entities - one for each building model - like this:
 
 ```cpp
     ecs.entity()

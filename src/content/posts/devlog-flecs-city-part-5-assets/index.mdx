@@ -1,0 +1,301 @@
+---
+title: "Devlog: Flecs City (Part 5)"
+description: "A replication-friendly asset system"
+pubDate: 2026-09-28
+headerImage: "./header.jpg"
+series: 'flecs-city'
+tags: ["devlog", "cpp", "cmake", "zig", "gtest"]
+---
+import ExtLink from "../../../components/ExtLink.astro";
+import Image from "../../../components/Image.astro";
+import imgScreenshot from "./screenshot.png";
+
+Previously, I [switched to Zig as a build system and integrated GoogleTest](/posts/2026/05/devlog-flecs-city-part-4-cmake-to-zig/). One side effect of that is my GitHub workflow stopped passing because I hadn't updated it from CMake to Zig. That, and I primarily use my own Forgejo instance with GitHub serving only as a mirror, so it made sense to migrate the CI too.
+
+So I set up a Forgejo Runner, and Flecs City was the first project I configured to build on it. I'm working on this project exclusively on Linux now, so Windows support is likely to be neglected over time, but that meant I could make the workflow significantly simpler:
+
+```yml title=".forgejo/workflows/test.yml"
+on: [push]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: install system dependencies
+              run: sudo apt update && sudo apt -y install libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev pkg-config
+            - name: install zig
+              uses: https://codeberg.org/mlugg/setup-zig@v2
+            - name: checkout code
+              uses: actions/checkout@v6
+              with:
+                submodules: true
+            - name: vcpkg bootstrap
+              run: ./vcpkg/bootstrap-vcpkg.sh
+            - name: vcpkg install
+              run: ./vcpkg/vcpkg install --triplet=x64-linux-dynamic
+            - name: test
+              run: zig build test
+```
+
+I should really add some caching in there, especially for the first two steps (and possibly the `vcpkg install` one). Arguably there's not much point in even having this workflow when I can easily run the tests locally and nobody else is contributing to the project, but setting up the runner was a first for me and seeing the little green checkmark next to the commits is satisfying. Maybe in the future I could make this do more interesting things, like run integration tests and publish screenshots somewhere.
+
+Anyway, onto more important things...
+
+### The asset system
+
+This is another thing I didn't originally include in the scope, but I realised it would be too useful to skip!
+
+I wanted to start drawing models in the scene so I'd have an environment to simulate things in; Raylib already handles loading the binary assets I'd need, including GLTF models, but the project lacked any concept of referencing assets without loading them (which is important for various reasons, one being that the server shouldn't be loading asset binaries in most cases).
+
+After some deliberation, I settled on a spec for a basic asset system:
+
+* JSON as the metadata format
+* Asset IDs as strings (internally hashed for efficiency)
+* A registry that can be initialised from a given path where assets can be discovered
+* An API for retrieving assets by ID hash
+
+I wrote two versions of this system. The first was a rough prototype that I quickly put together. It was functional, but had some major drawbacks:
+
+1. It was a completely centralised system at the application level, with asset types defined by a single enum and asset JSON being deserialised into a generic struct.
+2. It made heavy use of intermediate types in between the stages it went through to resolve the asset root path, discover asset manifests, and process them.
+
+After reviewing that, I added two more goals to the spec: simplify initialisation and expose an API for registering custom asset types.
+
+I wrote the second version from scratch and it's much better. It lives in its own module, the initialisation is dramatically simpler, and it allows other modules to register asset types so they have full ownership of the types and how they're deserialised.
+
+#### API
+
+To start with, I defined the API:
+
+```cpp
+/// @brief Registers an asset type. Must be called before Initialise.
+ASSETS_API void RegisterType(const std::string& name, DeserialiseFunc deserialiseFunc);
+
+/// @brief Recursively scans the given asset root for valid asset manifests and builds the asset registry.
+///
+/// @param assetRoot Directory to scan. Must not be null.
+/// @return True if the registry was built successfully.
+ASSETS_API bool Initialise(const char* assetRoot);
+
+/// @brief Returns the registered asset with the given ID, or nullptr if not found.
+ASSETS_API Asset* GetAsset(AssetId id);
+
+/// @brief Destroys the registry. Safe to call when not initialised.
+ASSETS_API void Shutdown();
+```
+
+The flow I had in mind for this was fairly straightforward. First, modules call `RegisterType` to register their custom asset types' names and deserialisers into a static type registry. Next, the application initialises the asset registry with `Initialise` - at this point any valid assets found in the `assetRoot` have been discovered and can be retrieved. Modules can then access assets through `GetAsset` at any point during the main loop. Finally, the application calls `Shutdown` during the shutdown phase, allowing the registry to be cleanly destroyed.
+
+One important detail here is that the assets module does not interact with asset binaries in any way. It only exists to discover asset manifests and readily provide other modules with the data found in those manifests. Anything outside of that, like loading a model file, is the caller's responsibility.
+
+#### Implementation
+
+Currently, the main part of the assets module is only around 230 lines. That's less than half the size of the previous version! The `Initialise` function gives you an idea of how it works internally:
+
+```cpp
+/// @brief Suffix identifying a manifest file within the asset tree.
+constexpr const char* MANIFEST_SUFFIX = ".json";
+
+struct Registry
+{
+    std::string mRoot;
+    std::vector<Asset*> mAssets;
+    std::unordered_map<AssetId, uint32_t> mIndexById;
+
+    void Initialise()
+    {
+        for (uint32_t i = 0; i < mAssets.size(); ++i)
+        {
+            if (!mIndexById.emplace(mAssets[i]->mId, i).second)
+            {
+                spdlog::error("Internal error: asset id {} ('{}') collided in the registry index.",
+                              mAssets[i]->mId, mAssets[i]->mIdString);
+            }
+        }
+    }
+};
+
+Registry gRegistry;
+
+bool Initialise(const char* assetRoot)
+{
+    Shutdown();
+
+    const std::optional<fs::path> root = ResolveRoot(assetRoot);
+    if (!root) return false;
+
+    Registry registry;
+    registry.mRoot = root->string();
+    if (!CollectAssets(*root, registry.mAssets))
+        return false;
+
+    gRegistry = std::move(registry);
+    gRegistry.Initialise();
+
+    if (gRegistry.mAssets.empty())
+        spdlog::warn("No assets found under '{}'.", gRegistry.mRoot);
+    else
+        spdlog::info("Registered {} asset(s) from '{}'.", gRegistry.mAssets.size(), gRegistry.mRoot);
+
+    return true;
+}
+```
+
+`CollectAssets` scans the asset root using <ExtLink url="https://en.cppreference.com/cpp/filesystem/recursive_directory_iterator">std::filesystem::recursive_directory_iterator</ExtLink>, skipping objects that aren't files with valid names and pushing non-duplicate assets into a vector to be sorted and moved into the asset registry.
+
+I should note that all of this is made far easier by <ExtLink url="https://github.com/nlohmann/json">nlohmann/json</ExtLink>, a popular JSON library for C++.
+
+#### Tests
+
+Since I added GTest, I told myself I wouldn't neglect test coverage when adding new systems or features. So far I have stuck to that. I took this opportunity to update the build config to make `zig build test` discover tests dynamically, including module tests, instead of having to explicitly list test source paths. This means the assets module has its own test suites.
+
+I wrote six unit tests covering the `RegisterType` and `GetAsset` API functions:
+
+```log
+[----------] 2 tests from Assets
+[ RUN      ] Assets.MakeAssetId_DistinguishesAssetTypes
+[       OK ] Assets.MakeAssetId_DistinguishesAssetTypes (0 ms)
+[ RUN      ] Assets.MakeAssetId_RejectsNullId
+[       OK ] Assets.MakeAssetId_RejectsNullId (0 ms)
+[----------] 2 tests from Assets (0 ms total)
+
+[----------] 4 tests from AssetRegistryTest
+[2026-09-28 19:55:35.194] [error] Asset manifest 'duplicate_a.json' reuses asset id 'duplicate' (2214135912); skipping.
+[2026-09-28 19:55:35.194] [info] Registered 5 asset(s) from '/tmp/flecs_city_asset_tests'.
+[ RUN      ] AssetRegistryTest.GetAsset_ReturnsRegisteredFoo
+[       OK ] AssetRegistryTest.GetAsset_ReturnsRegisteredFoo (0 ms)
+[ RUN      ] AssetRegistryTest.GetAsset_SeparatesTypesWithTheSameId
+[       OK ] AssetRegistryTest.GetAsset_SeparatesTypesWithTheSameId (0 ms)
+[ RUN      ] AssetRegistryTest.GetAsset_RejectsDuplicates
+[       OK ] AssetRegistryTest.GetAsset_RejectsDuplicates (0 ms)
+[ RUN      ] AssetRegistryTest.GetAsset_ReturnsNullForUnknownId
+[       OK ] AssetRegistryTest.GetAsset_ReturnsNullForUnknownId (0 ms)
+[----------] 4 tests from AssetRegistryTest (0 ms total)
+```
+
+The `GetAsset` suite uses a fixture to write test manifests to a temporary location and register some asset types. This all looks good, but it's not as fun as actually doing cool things with assets - so let's take a look at that next!
+
+### Working with assets
+
+Considering my goal before this was to jump straight into loading and drawing models, the obvious thing to do was set up a Model asset type and use that.
+
+I updated the Core module to do exactly that. It has a `ModuleAsset` struct, which contains everything necessary for the asset system and for usage in Core itself:
+
+```cpp
+struct ModelAsset : Assets::Asset
+{
+    float mScale = 1.0f;
+    Color mTint = WHITE;
+
+    std::string mModelPath;
+
+    inline static const std::string Type = "model";
+
+    static Asset* Deserialize(const nlohmann::json& json, const std::string& directoryPath)
+    {
+        ModelAsset asset;
+        Assets::Deserialize(json, &asset);
+
+        asset.mScale = json.value("scale", 1.0f);
+
+        const std::filesystem::path defaultModelPath = (std::filesystem::path(directoryPath) / fmt::format("{}.gltf", asset.mIdString)).lexically_normal();
+        asset.mModelPath = json.value("modelPath", defaultModelPath);
+
+        if (json.contains("tint"))
+            Utils::Json::ParseColor(json.at("tint"), asset.mTint);
+
+        return new ModelAsset{std::move(asset)};
+    }
+};
+```
+
+I'm not entirely sure about this approach to handling related file paths. I think it's useful for each asset type to decide what other files it needs to know about and how to construct their paths, but maybe this could be done in a more generic way. Something to look at another day.
+
+To help modules register their asset types, I expanded the `Module` struct exported by each module to include a `RegisterAssetTypes` function pointer, which the application calls during initialisation just before it initialises the asset registry.
+
+The Core module simply registers its model asset type like so:
+
+```cpp
+static void RegisterAssetTypes()
+{
+    Assets::RegisterType(ModelAsset::Type, &ModelAsset::Deserialize);
+}
+```
+
+That's all it needs in order to discover model assets. To start putting together a city scene, I downloaded the excellent <ExtLink url="https://kaylousberg.itch.io/city-builder-bits">KayKit: City Builder Bits</ExtLink> asset pack and created manifests for three of the building models. The JSON for the manifests simply looks like this:
+
+```json
+{
+    "id": "building_A",
+    "type": "model"
+}
+```
+(Note: this could also contain "scale" and "color" properties as per the `ModelAsset` implementation - they default to 1.0 and white respectively.)
+
+All I needed to do next was figure out how to create entities with models in a server-authoritative way. Thankfully Flecs made this very easy to do. The idea I settled on was to have two model components - one replicated asset containing a reference to the model asset to use, and the other with the actual Raylib Model instance:
+
+```cpp
+/// @brief References a model asset by ID.
+struct ModelComponent
+{
+    Assets::AssetId mModelAssetId;
+
+    float mScale = 1.f;
+    Color mTint = WHITE;
+};
+
+/// @brief Wraps a model instance loaded by Raylib. Should be initialised from a @c ModelComponent.
+struct ModelInstanceComponent
+{
+    Model mModel;
+
+    float mScale = 1.f;
+    Color mTint = WHITE;
+};
+```
+
+This split enables the server to create entities with `ModelComponent` and queue them for replication. Since `Assets::AssetId` is just `uint32_t`, it already has replication support, so all I needed to do was process the entities.
+
+I created three entities - one for each module - like this:
+
+```cpp
+    ecs.entity()
+        .set<ReplicatedComponent>({})
+        .set<PositionComponent>({1.0, 0, 1.0})
+        .set<ModelComponent>({Assets::MakeAssetId("building_A", ModelAsset::Type)});
+```
+
+Under normal circumstances, entities like these wouldn't be hardcoded and there would certainly be no hardcoded references to assets by their string IDs. If I ever get around to it, this project will become much more data-driven and asset references will only come from other assets such as levels or prefabs.
+
+No extra ECS systems are needed on the server for these entities. I created two new systems on the client to load and draw models respectively:
+
+```cpp
+    ecs.system<const ModelComponent>("LoadModels")
+        .with<PositionComponent>()
+        .without<ModelInstanceComponent>()
+        .kind(fc::Draw3D)
+        .each([](const flecs::entity e, const ModelComponent& model) {
+            const ModelAsset* asset = static_cast<ModelAsset*>(Assets::GetAsset(model.mModelAssetId));
+            e.set<ModelInstanceComponent>({
+                .mModel = LoadModel(asset->mModelPath.c_str()),
+                .mScale = model.mScale,
+                .mTint = model.mTint
+            });
+        });
+
+    ecs.system<const PositionComponent, const ModelInstanceComponent>("DrawModels")
+        .kind(fc::Draw3D)
+        .each([](const PositionComponent& position, const ModelInstanceComponent& model) {
+            DrawModel(model.mModel, position.mPosition, model.mScale, model.mTint);
+        });
+```
+
+The "LoadModels" system only matches `ModelComponent` entities that have just been replicated and haven't received a `ModelInstanceComponent` yet. Meanwhile, the "DrawModels" system runs every tick.
+
+Here's the end result:
+
+<Image src={imgScreenshot} alt="Screenshot of the app window with three building models being drawn" />
+
+Perfect! That paves the way for an actual level to be built, which means my goal for the next post is to have an appropriate level format that allows me to define where roads and buildings go, as well as how the roads connect.
+
+Until then, thanks for reading!

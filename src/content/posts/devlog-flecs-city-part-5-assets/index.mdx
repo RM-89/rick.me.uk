@@ -232,7 +232,7 @@ That's all it needs in order to discover model assets. To start putting together
 ```
 (Note: this could also contain "scale" and "color" properties as per the `ModelAsset` implementation - they default to 1.0 and white respectively.)
 
-All I needed to do next was figure out how to create entities with models in a server-authoritative way. Thankfully Flecs made this very easy to do. The idea I settled on was to have two model components - one replicated asset containing a reference to the model asset to use, and the other with the actual Raylib Model instance:
+All I needed to do next was figure out how to create entities with models in a server-authoritative way. Thankfully Flecs made this very easy to do. The idea I settled on was to have two model components - one replicated component containing a reference to the model asset to use, and the other with the actual Raylib Model instance:
 
 ```cpp
 /// @brief References a model asset by ID.

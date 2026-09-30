@@ -179,7 +179,7 @@ The `GetAsset` suite uses a fixture to write test manifests to a temporary locat
 
 Considering my goal before this was to jump straight into loading and drawing models, the obvious thing to do was set up a Model asset type and use that.
 
-I updated the Core module to do exactly that. It has a `ModuleAsset` struct, which contains everything necessary for the asset system and for usage in Core itself:
+I updated the Core module to do exactly that. It has a `ModelAsset` struct, which contains everything necessary for the asset system and for usage in Core itself:
 
 ```cpp
 struct ModelAsset : Assets::Asset

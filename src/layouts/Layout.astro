@@ -82,6 +82,7 @@ let pageTitle = title ? `${title} • ${SITE_TITLE}` : SITE_TITLE;
     --color-background-lower: #1b1d25;
     --color-link: #82aaff;
     --color-brand: #ffb49c;
+    --color-background-brand: #31292c;
     --color-accent-1: #7cdeb5;
     --color-accent-1-lighter: hsl(from var(--color-accent-1) h s calc(l + 10));
     --color-accent-1-darker: hsl(from var(--color-accent-1) h s calc(l - 10));
@@ -242,8 +243,18 @@ strong {
     font-weight: 600;
 }
 
-ul li {
-    margin: .25rem 0;
+ul,
+ol {
+    padding-inline-start: 3.5rem;
+
+    li {
+        padding-inline-start: .5rem;
+        margin: .33rem 0;
+
+        &::marker {
+            color: var(--color-brand);
+        }
+    }
 }
 
 .m {
@@ -525,10 +536,11 @@ table {
 p > code, li > code {
     display: inline-block;
     padding: .1rem .4em;
-    border-radius: .3em;
-    background: #292c3e;
+    border-radius: .25em;
+    background: var(--color-background-brand);
     font-size: 1rem;
     font-family: "JetBrains Mono", monospace;
+    color: var(--color-brand);
     word-wrap: anywhere;
 }
 
@@ -547,6 +559,15 @@ p > code, li > code {
     .posts .card-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    ul,
+    ol {
+        padding-inline-start: 2rem;
+
+        li {
+            padding-inline-start: 0rem;
+        }
     }
 
     .grid-2 {

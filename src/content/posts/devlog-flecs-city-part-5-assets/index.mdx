@@ -259,10 +259,10 @@ This split enables the server to create entities with `ModelComponent` and queue
 I created three entities - one for each building model - like this:
 
 ```cpp
-    ecs.entity()
-        .set<ReplicatedComponent>({})
-        .set<PositionComponent>({1.0, 0, 1.0})
-        .set<ModelComponent>({Assets::MakeAssetId("building_A", ModelAsset::Type)});
+ecs.entity()
+    .set<ReplicatedComponent>({})
+    .set<PositionComponent>({1.0, 0, 1.0})
+    .set<ModelComponent>({Assets::MakeAssetId("building_A", ModelAsset::Type)});
 ```
 
 Under normal circumstances, entities like these wouldn't be hardcoded and there would certainly be no hardcoded references to assets by their string IDs. If I ever get around to it, this project will become much more data-driven and asset references will only come from other assets such as levels or prefabs.
@@ -270,24 +270,24 @@ Under normal circumstances, entities like these wouldn't be hardcoded and there 
 No extra ECS systems are needed on the server for these entities. I created two new systems on the client to load and draw models respectively:
 
 ```cpp
-    ecs.system<const ModelComponent>("LoadModels")
-        .with<PositionComponent>()
-        .without<ModelInstanceComponent>()
-        .kind(fc::Draw3D)
-        .each([](const flecs::entity e, const ModelComponent& model) {
-            const ModelAsset* asset = static_cast<ModelAsset*>(Assets::GetAsset(model.mModelAssetId));
-            e.set<ModelInstanceComponent>({
-                .mModel = LoadModel(asset->mModelPath.c_str()),
-                .mScale = model.mScale,
-                .mTint = model.mTint
-            });
+ecs.system<const ModelComponent>("LoadModels")
+    .with<PositionComponent>()
+    .without<ModelInstanceComponent>()
+    .kind(fc::Draw3D)
+    .each([](const flecs::entity e, const ModelComponent& model) {
+        const ModelAsset* asset = static_cast<ModelAsset*>(Assets::GetAsset(model.mModelAssetId));
+        e.set<ModelInstanceComponent>({
+            .mModel = LoadModel(asset->mModelPath.c_str()),
+            .mScale = model.mScale,
+            .mTint = model.mTint
         });
+    });
 
-    ecs.system<const PositionComponent, const ModelInstanceComponent>("DrawModels")
-        .kind(fc::Draw3D)
-        .each([](const PositionComponent& position, const ModelInstanceComponent& model) {
-            DrawModel(model.mModel, position.mPosition, model.mScale, model.mTint);
-        });
+ecs.system<const PositionComponent, const ModelInstanceComponent>("DrawModels")
+    .kind(fc::Draw3D)
+    .each([](const PositionComponent& position, const ModelInstanceComponent& model) {
+        DrawModel(model.mModel, position.mPosition, model.mScale, model.mTint);
+    });
 ```
 
 The "LoadModels" system only matches `ModelComponent` entities that have just been replicated and haven't received a `ModelInstanceComponent` yet. Meanwhile, the "DrawModels" system runs every tick.

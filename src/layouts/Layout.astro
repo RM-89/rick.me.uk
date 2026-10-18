@@ -572,15 +572,41 @@ p > code, li > code {
     --pele-font: "Saira", sans-serif;
     --pele-font-mono: "JetBrains Mono", monospace;
 
+    text-align: center;
+
     svg {
         stroke-width: 2px;
     }
+
+    .pele-zoom {
+        opacity: 0;
+        transition: opacity 0.2s ease-out;
+    }
+
+    &:hover .pele-zoom {
+        opacity: 1;
+    }
+}
+
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: .2s;
 }
 
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before {
         transition: none !important;
+    }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
     }
 }
 

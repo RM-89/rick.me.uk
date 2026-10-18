@@ -8,7 +8,6 @@ tags: ["devlog", "cpp", "game-engine", "ecs"]
 ---
 import ExtLink from '../../../components/ExtLink.astro';
 import Image from '../../../components/Image.astro';
-import engineStructureImage from './engine-structure.jpg';
 import multiWindowTestImage from './multi-window-test.jpg';
 
 Before I get into the main topic for this post, I want to briefly cover build time for the project. Up until now, on my desktop machine (AMD Ryzen 7 1700X) a full build would take approximately 1 minute 15 seconds, and an incremental one (small changes in first party sources) would take around 40 seconds. Not terrible, but it could get annoying during quick iterations of a feature or change.
@@ -170,7 +169,36 @@ With all of those changes in place, the program flow now looks like this:
 
 Here's a rough overview of how the ECS, Window, Scene, and App fit together (some elements outside the scope of this post, such as InputManager and AssetManager, are not pictured):
 
-<Image src={engineStructureImage} alt="Iris engine ECS/Scene/App structure" />
+```mermaid
+flowchart LR
+    main(["main()"])
+
+    main --> EntityManager
+    main --> ComponentManager
+    main --> SystemManager
+    main --> App
+    main --> WindowManager
+    main --> SceneManager
+
+    EntityManager --> EntityId
+    EntityId --> ComponentStore
+    EntityId --> Scene
+
+    ComponentManager --> ComponentStore
+    ComponentStore --> Component
+
+    SystemManager --> System
+    System --> ComponentManager
+    System <--> App
+
+    WindowManager --> Window
+    Window --> State
+
+    SceneManager --> Scene
+    Scene --> State
+
+    State --> App["App<br/>(main loop)"]
+```
 
 Lastly, here's a screenshot of it in action with two windows and scenes:
 
@@ -188,4 +216,4 @@ I'm also discovering that building the engine without a specific game concept (o
 
 ---
 
-*The latest code for this project can be found at <ExtLink url="https://github.com/Riari/iris-engine">{"https://github.com/Riari/iris-engine"}</ExtLink>.*
+*The latest code for this project can be found at <ExtLink url="https://github.com/RM-89/iris-engine">{"https://github.com/RM-89/iris-engine"}</ExtLink>.*

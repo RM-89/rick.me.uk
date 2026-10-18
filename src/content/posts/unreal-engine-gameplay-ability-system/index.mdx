@@ -11,7 +11,6 @@ import Image from "../../../components/Image.astro"
 import OpenGraphSummary from "../../../components/OpenGraphSummary.astro"
 import Video from "../../../components/Video.astro"
 
-import gasDiagramImage from "./gas-overview-diagram.png"
 import blueprintGAFireEnergyWeaponImage from "./blueprint-ga_fireenergyweapon.png"
 import gaFireEnergyWeaponClassDefaultsImage from "./ga_fireenergyweapon-class-defaults.png"
 import geDefaultAttributesImage from "./ge_defaultattributes.png"
@@ -79,7 +78,33 @@ Lastly, **Ability Tasks**. Ability Tasks are essentially asynchronous tasks fire
 
 Putting all of these elements together, the system looks like this:
 
-<Image src={gasDiagramImage} alt="A diagram of the Gameplay Ability System" height="800px"></Image>
+```mermaid
+flowchart TD
+    Owner["OwnerActor / AvatarActor"]
+    ASC["AbilitySystemComponent<br/>(ASC)"]
+    Attr["Attribute Sets"]
+    Abilities["Gameplay Abilities"]
+    Tasks["Ability Tasks"]
+    Effects["Gameplay Effects"]
+    Tags["Gameplay Tags"]
+    Cues["Gameplay Cues"]
+
+    Owner -- "Has one" --> ASC
+    Owner -- "Has many" --> Attr
+
+    ASC -- "Interfaces with" --> Attr
+    ASC -- "Interfaces with" --> Abilities
+    ASC -- "Interfaces with" --> Effects
+
+    Abilities -- "Executes" --> Tasks
+    Abilities -- "Applies" --> Effects
+
+    Effects -- "Modifies" --> Attr
+    Effects -- "Writes" --> Tags
+    Effects -- "Triggers" --> Cues
+
+    Cues -- "Writes" --> Tags
+```
 
 ### A practical example
 

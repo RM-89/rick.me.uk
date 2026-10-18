@@ -8,9 +8,7 @@ tags: ["devlog", "cpp", "flecs", "ecs", "enet", "netcode"]
 ---
 import ExtLink from "../../../components/ExtLink.astro";
 import OpenGraphSummary from "../../../components/OpenGraphSummary.astro";
-import Image from "../../../components/Image.astro";
 import Video from "../../../components/Video.astro";
-import threadFlowDiagram from "./thread-flow-diagram.png";
 import demoVideo from "./demo.mp4";
 
 In the <a href="/posts/2025/09/devlog-flecs-city-part-2-library-and-architecture-changes/">previous devlog</a>, I integrated <ExtLink url="http://enet.bespin.org/">ENet</ExtLink> and implemented a network thread with support for sending and receiving basic messages.
@@ -252,7 +250,24 @@ I extended the server application loop to include an "update replication" step, 
 
 The requests are placed in a queue and sent as messages at regular intervals. The overall thread flow on the server looks like this:
 
-<Image src={threadFlowDiagram} alt="Thread flow diagram" caption="Thread flow diagram" />
+```mermaid
+flowchart TD
+    subgraph MainLoop["Main thread loop"]
+        direction TB
+        Progress["Progress ECS world"] --> Query["Query dirty entities"]
+        Query --> Serialise["Serialise component data"]
+        Serialise --> Generate["Generate replication<br/>requests"]
+        Generate --> Clear["Clear dirty flags"]
+    end
+
+    subgraph NetLoop["Network thread loop"]
+        direction TB
+        Handle["Handle ENet events"] --> ProcessReq["Process replication<br/>request queue"]
+        ProcessReq --> ProcessMsg["Process message queue"]
+    end
+
+    Generate -- "Add to queue" --> ProcessReq
+```
 
 To simplify interpretation of messages, I designated the first two ENet channel IDs--`0` for "general" messages (this will likely serve no real purpose, but could be useful for debugging) and `1` for replication messages.
 
@@ -370,7 +385,7 @@ Those changes were the last pieces needed to get fully functioning replication i
 <Video src={demoVideo} alt="Demonstration of a server instance with two clients" />
 <div class="caption">Replication demo</div>
 
-If you'd like to see the full code diff for the whole system, you can view the PR <ExtLink url="https://github.com/Riari/flecs-city/pull/1">here</ExtLink>.
+If you'd like to see the full code diff for the whole system, you can view the PR <ExtLink url="https://github.com/RM-89/flecs-city/pull/1">here</ExtLink>.
 
 ### What's next
 

@@ -1,11 +1,11 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-
 import react from '@astrojs/react';
-
 import mdx from '@astrojs/mdx';
-
+import { satteri } from '@astrojs/markdown-satteri';
 import expressiveCode from 'astro-expressive-code';
+
+import { satteriPele } from './src/plugins/satteri-pele.mjs';
 
 // https://astro.build/config
 export default defineConfig({
@@ -26,6 +26,12 @@ export default defineConfig({
         }),
         mdx()
     ],
+    markdown: {
+        syntaxHighlight: { type: "shiki", excludeLangs: ["mermaid", "math"] },
+        processor: satteri({
+            mdastPlugins: [satteriPele]
+        })
+    },
     image: {
         remotePatterns: [{ protocol: "https" }],
     }

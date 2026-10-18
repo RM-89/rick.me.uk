@@ -78,6 +78,7 @@ let pageTitle = title ? `${title} • ${SITE_TITLE}` : SITE_TITLE;
     --color-foreground-muted-2: #bfc1c9;
     --color-foreground-muted-3: #898a98;
     --color-foreground-inverted: #252732;
+    --color-border-1: #4b4b60;
     --color-background-upper: #272c3d;
     --color-background-lower: #1b1d25;
     --color-link: #82aaff;
@@ -546,6 +547,34 @@ p > code, li > code {
 
 .medium-zoom-overlay, .medium-zoom-image {
     z-index: 200;
+}
+
+.pele {
+    --pele-bg: var(--color-background-lower);
+    --pele-fg: var(--color-foreground);
+    --pele-muted: var(--color-foreground-muted-1);
+    --pele-line: var(--color-foreground-muted-2);
+
+    --pele-surface: var(--color-background-upper);
+    --pele-surface-alt: var(--color-background-upper);
+    --pele-border: var(--color-border-1);
+
+    --pele-accent: var(--color-brand);
+    --pele-critical: var(--color-accent-3);
+    --pele-error: var(--color-accent-3);
+
+    --pele-series-1: var(--color-brand);
+    --pele-series-2: var(--color-accent-1);
+    --pele-series-3: var(--color-accent-2);
+    --pele-series-4: var(--color-accent-3);
+    --pele-series-5: var(--color-accent-4);
+
+    --pele-font: "Saira", sans-serif;
+    --pele-font-mono: "JetBrains Mono", monospace;
+
+    svg {
+        stroke-width: 2px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
